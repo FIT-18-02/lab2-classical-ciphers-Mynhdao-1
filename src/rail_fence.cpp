@@ -34,11 +34,41 @@ string rail_fence_encrypt(const string &plaintext, int rails) {
 }
 
 string rail_fence_decrypt(const string &ciphertext, int rails) {
-    return ciphertext;
+    if (rails <= 1 || ciphertext.empty()) return ciphertext;
+
+    vector<string> fence(rails, string(ciphertext.length(), '\0'));
+    int rail = 0;
+    int direction = 1;
+
+    for (int i = 0; i < ciphertext.length(); i++) {
+        fence[rail][i] = '*';
+        rail += direction;
+        if (rail == rails - 1 || rail == 0) direction = -direction;
+    }
+
+    int index = 0;
+    for (int r = 0; r < rails; r++) {
+        for (int c = 0; c < ciphertext.length(); c++) {
+            if (fence[r][c] == '*' && index < ciphertext.length()) {
+                fence[r][c] = ciphertext[index++];
+            }
+        }
+    }
+
+    string plaintext = "";
+    rail = 0;
+    direction = 1;
+    for (int i = 0; i < ciphertext.length(); i++) {
+        plaintext += fence[rail][i];
+        rail += direction;
+        if (rail == rails - 1 || rail == 0) direction = -direction;
+    }
+    return plaintext;
 }
 
 string read_message_from_file(const string &path) {
     ifstream fin(path);
+    if (!fin) return "";
     string line;
     getline(fin, line);
     return line;
@@ -57,6 +87,10 @@ int main() {
 
     if (choice == 3) {
         message = read_message_from_file("data/input.txt");
+        if (message.empty()) {
+            cout << "Error reading file or file is empty.\n";
+            return 0;
+        }
         cout << "Message from file: " << message << "\n";
     } else {
         cout << "Enter message: ";
